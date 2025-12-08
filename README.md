@@ -15,6 +15,6 @@ Infrastructure as code provider for deploying and managing InferaDB resources.
 
 ## Related Resources
 
-- [Server Terraform Modules](../server/terraform/) - AWS deployment modules
-- [Server Documentation](../server/docs/) - InferaDB server documentation
-- [Management API](../management/) - Management API for tenant orchestration
+- [Engine Terraform Modules](../engine/terraform/) - AWS deployment modules
+- [Engine Documentation](../engine/docs/) - InferaDB engine documentation
+- [Control API](../control/) - Control API for tenant orchestration
