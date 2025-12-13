@@ -1,0 +1,79 @@
+# Copyright 2025 InferaDB
+# SPDX-License-Identifier: Apache-2.0
+
+name: Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+      - run: go mod download
+      - run: go build -v ./...
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+      - run: go mod download
+      - run: go test -v -cover -timeout=120s -parallel=4 ./...
+
+  # Acceptance tests require real API access and are run manually or on main branch
+  acceptance:
+    name: Acceptance Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build, lint, test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.8.*"
+          terraform_wrapper: false
+      - run: go mod download
+      - run: go test -v -cover -timeout 120m ./...
+        env:
+          TF_ACC: "1"
+          INFERADB_ENDPOINT: ${{ secrets.INFERADB_ENDPOINT }}
+          INFERADB_SESSION_TOKEN: ${{ secrets.INFERADB_SESSION_TOKEN }}
