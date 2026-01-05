@@ -1,0 +1,54 @@
+# Labeler configuration
+# See: https://github.com/actions/labeler
+# Labels must match those defined in repos.json (common labels only)
+
+# Documentation
+area/docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"
+          - "docs/**/*"
+
+# CI/CD
+area/ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**/*"
+
+# Configuration
+area/config:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.yaml"
+          - "**/*.yml"
+          - "**/*.json"
+          - "!.github/**/*"
+
+# Dependencies
+area/deps:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "go.mod"
+          - "go.sum"
+
+# Testing
+area/testing:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*_test.go"
+          - "**/tests/**/*"
+          - "**/testdata/**/*"
+
+# API
+area/api:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/api/**/*"
+          - "**/client/**/*"
+
+# Authentication
+area/auth:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/auth/**/*"
+          - "**/authentication/**/*"

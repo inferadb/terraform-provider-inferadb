@@ -1,6 +1,11 @@
-# Terraform Provider for InferaDB
+<div align="center">
+    <p><a href="https://inferadb.com"><img src=".github/inferadb.png" width="100" alt="InferaDB Logo" /></a></p>
+    <h1>InferaDB Terraform Provider</h1>
+    <p>Manage InferaDB resources including organizations, vaults, clients, teams, and access grants</p>
+</div>
 
-Terraform provider for managing InferaDB Control Plane resources including organizations, vaults, clients, teams, and access grants.
+> [!IMPORTANT]
+> Under active development. Not production-ready.
 
 ## Requirements
 
