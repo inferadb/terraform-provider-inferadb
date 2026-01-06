@@ -150,6 +150,27 @@ jobs:
           # Clone control repo as sibling directory (needed for Docker build context)
           git clone --depth 1 https://github.com/inferadb/control.git ../control
 
+          # Verify clone succeeded and show structure
+          echo "Control repo contents:"
+          ls -la ../control/
+
+      - name: Generate Cargo.lock if needed
+        run: |
+          # Generate Cargo.lock using Docker (same Rust image as the build)
+          # This ensures version consistency and doesn't require Rust on the runner
+          if [ ! -f ../control/Cargo.lock ]; then
+            echo "Generating Cargo.lock using Docker..."
+            docker run --rm \
+              -v "$(realpath ../control):/workspace" \
+              -w /workspace \
+              rustlang/rust:nightly-bookworm-slim \
+              cargo generate-lockfile
+            echo "Cargo.lock generated:"
+            ls -la ../control/Cargo.lock
+          else
+            echo "Cargo.lock already exists"
+          fi
+
       - name: Setup Go
         uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
