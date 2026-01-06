@@ -50,3 +50,4 @@ go.work.sum
 # Local development
 .envrc
 .env
+.env.test

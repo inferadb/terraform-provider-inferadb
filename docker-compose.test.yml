@@ -1,0 +1,89 @@
+# Docker Compose for Terraform Provider Acceptance Tests
+# This provides a complete test environment with FoundationDB, MailHog, and Control
+# NOT FOR PRODUCTION USE
+
+services:
+  # FoundationDB server (custom multi-arch build with ARM64 support)
+  foundationdb:
+    build:
+      context: ../control
+      dockerfile: docker/fdb-integration-tests/Dockerfile.fdb
+    container_name: terraform-provider-fdb
+    hostname: fdb-server
+    networks:
+      - terraform-test-network
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -x fdbserver > /dev/null && test -f /var/fdb/fdb.cluster"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    volumes:
+      - fdb-config:/var/fdb
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+  # MailHog for email testing (captures verification emails)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: terraform-provider-mailhog
+    networks:
+      - terraform-test-network
+    ports:
+      - "8025:8025"  # Web UI for debugging
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8025"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  # Control API service
+  control:
+    build:
+      context: ../control
+      dockerfile: Dockerfile.integration
+    container_name: terraform-provider-control
+    networks:
+      - terraform-test-network
+    ports:
+      - "9090:9090"  # Public REST API
+      - "9091:9091"  # Public gRPC API
+      - "9092:9092"  # Private REST API (JWKS, internal)
+    depends_on:
+      foundationdb:
+        condition: service_healthy
+      mailhog:
+        condition: service_healthy
+    environment:
+      # FoundationDB cluster file location
+      FDB_CLUSTER_FILE: /var/fdb/fdb.cluster
+      # Logging
+      RUST_LOG: debug
+      RUST_BACKTRACE: 1
+    volumes:
+      # Share FDB cluster configuration (mount to /var/fdb as expected by config)
+      - fdb-config:/var/fdb:ro
+      # Mount custom config for testing
+      - ./config.test.yaml:/app/config.yaml:ro
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:9090/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+
+networks:
+  terraform-test-network:
+    driver: bridge
+    name: terraform-provider-test-net
+
+volumes:
+  fdb-config:
+    name: terraform-provider-fdb-config
