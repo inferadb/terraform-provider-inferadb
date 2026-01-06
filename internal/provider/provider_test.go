@@ -24,9 +24,7 @@ func testAccPreCheck(t *testing.T) {
 	if os.Getenv("INFERADB_SESSION_TOKEN") == "" {
 		t.Fatal("INFERADB_SESSION_TOKEN must be set for acceptance tests")
 	}
-
-	// Default endpoint for local K8s testing
 	if os.Getenv("INFERADB_ENDPOINT") == "" {
-		t.Setenv("INFERADB_ENDPOINT", "http://localhost:9090")
+		t.Fatal("INFERADB_ENDPOINT must be set for acceptance tests")
 	}
 }
