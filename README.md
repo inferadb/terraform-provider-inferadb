@@ -145,4 +145,9 @@ make lint
 
 ## License
 
-Apache License 2.0 - see [LICENSE](LICENSE) for details.
+Licensed under either of:
+
+- [Apache License, Version 2.0](LICENSE-APACHE)
+- [MIT License](LICENSE-MIT)
+
+at your option.
