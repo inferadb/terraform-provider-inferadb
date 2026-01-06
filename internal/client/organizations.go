@@ -27,19 +27,6 @@ func normalizeTier(apiTier string) string {
 	return apiTier
 }
 
-// denormalizeTier converts Terraform tier format (dev) to API format (TIER_DEV_V1).
-func denormalizeTier(tier string) string {
-	tierMap := map[string]string{
-		"dev": "TIER_DEV_V1",
-		"pro": "TIER_PRO_V1",
-		"max": "TIER_MAX_V1",
-	}
-	if apiTier, ok := tierMap[strings.ToLower(tier)]; ok {
-		return apiTier
-	}
-	return tier
-}
-
 // CreateOrganization creates a new organization.
 func (c *Client) CreateOrganization(ctx context.Context, req CreateOrganizationRequest) (*Organization, error) {
 	var resp OrganizationResponse

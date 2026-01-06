@@ -27,6 +27,6 @@ func testAccPreCheck(t *testing.T) {
 
 	// Default endpoint for local K8s testing
 	if os.Getenv("INFERADB_ENDPOINT") == "" {
-		os.Setenv("INFERADB_ENDPOINT", "http://localhost:9090")
+		t.Setenv("INFERADB_ENDPOINT", "http://localhost:9090")
 	}
 }
