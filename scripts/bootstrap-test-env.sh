@@ -13,7 +13,8 @@
 # Usage: ./scripts/bootstrap-test-env.sh [OPTIONS]
 #
 # Options:
-#   --endpoint URL    Control API endpoint (default: http://localhost:9090)
+#   --endpoint URL    Control server base URL (default: http://localhost:9090)
+#                     Note: /control prefix is added automatically for API calls
 #   --timeout SECS    Maximum wait time for Control (default: 120)
 #   --export-file     Write exports to file for sourcing (default: .env.test)
 #   --github-output   Write to GITHUB_OUTPUT for Actions
@@ -49,7 +50,9 @@ TEST_PASSWORD="${INFERADB_TEST_PASSWORD:-TestPassword123!$(date +%s)}"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --endpoint)
-            ENDPOINT="$2"
+            # --endpoint sets the base URL; ENDPOINT is derived with /control suffix
+            BASE_URL="$2"
+            ENDPOINT="${BASE_URL}/control"
             shift 2
             ;;
         --timeout)

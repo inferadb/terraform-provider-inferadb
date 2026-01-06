@@ -129,7 +129,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   # Acceptance tests run against a local Docker-based test environment
-  # Runs on push to main only (requires Control submodule for Docker build)
+  # Runs on push to main only (requires cloning Control repo for Docker build)
   acceptance:
     name: Acceptance Tests
     runs-on: ubuntu-latest
@@ -145,12 +145,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
-      - name: Checkout control submodule
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-        with:
-          repository: inferadb/control
-          path: ../control
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Clone control repository
+        run: |
+          # Clone control repo as sibling directory (needed for Docker build context)
+          git clone --depth 1 https://github.com/inferadb/control.git ../control
 
       - name: Setup Go
         uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
@@ -183,7 +181,9 @@ jobs:
       - name: Run acceptance tests
         env:
           TF_ACC: "1"
-          INFERADB_ENDPOINT: http://localhost:9090
+          # Endpoint includes /control prefix since we're hitting Control API directly
+          # (in production, the gateway handles this routing)
+          INFERADB_ENDPOINT: ${{ steps.bootstrap.outputs.inferadb_endpoint }}
           INFERADB_SESSION_TOKEN: ${{ steps.bootstrap.outputs.inferadb_session_token }}
         run: go test -v -cover -timeout 120m ./...
 
