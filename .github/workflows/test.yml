@@ -90,7 +90,43 @@ jobs:
         run: go mod download
 
       - name: Run unit tests
-        run: go test -v -cover -timeout=120s -parallel=4 ./...
+        run: go test -v -timeout=120s -parallel=4 ./...
+
+  # Code coverage (non-blocking, for information only)
+  coverage:
+    name: Code Coverage
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
+    continue-on-error: true
+    timeout-minutes: 15
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+        with:
+          egress-policy: audit
+
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Setup Go
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Generate coverage
+        run: go test -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
+        with:
+          files: coverage.out
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   # Acceptance tests require real API access and are run on push to main
   acceptance:
@@ -132,7 +168,7 @@ jobs:
 
   ci-success:
     name: CI Success
-    needs: [build, lint, test]
+    needs: [build, lint, test, coverage]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -146,12 +182,20 @@ jobs:
           BUILD_RESULT: ${{ needs.build.result }}
           LINT_RESULT: ${{ needs.lint.result }}
           TEST_RESULT: ${{ needs.test.result }}
+          COVERAGE_RESULT: ${{ needs.coverage.result }}
         run: |
-          results="$BUILD_RESULT $LINT_RESULT $TEST_RESULT"
-          for result in $results; do
+          echo "Job Results:"
+          echo "  Build: $BUILD_RESULT"
+          echo "  Lint: $LINT_RESULT"
+          echo "  Test: $TEST_RESULT"
+          echo "  Coverage: $COVERAGE_RESULT (non-blocking)"
+          echo ""
+
+          # Check required jobs (coverage is non-blocking)
+          for result in $BUILD_RESULT $LINT_RESULT $TEST_RESULT; do
             if [[ "$result" != "success" && "$result" != "skipped" ]]; then
-              echo "One or more jobs failed"
+              echo "One or more required jobs failed"
               exit 1
             fi
           done
-          echo "All checks passed!"
+          echo "All required checks passed!"
