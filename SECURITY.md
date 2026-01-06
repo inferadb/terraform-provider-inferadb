@@ -42,17 +42,14 @@ We follow [coordinated vulnerability disclosure](https://en.wikipedia.org/wiki/C
 
 Security issues we're interested in include:
 
-- Credential exposure in state files
-- Authentication bypasses
-- Privilege escalation
-- Sensitive data in logs or outputs
-- Supply chain vulnerabilities
+- Test fixtures that could expose security vulnerabilities
+- Insecure test patterns that might be copied
+- Credential exposure in test configurations
 
 ## Out of Scope
 
-- Vulnerabilities in Terraform core (report to HashiCorp)
-- Vulnerabilities in dependencies (report to the upstream project)
-- Issues requiring access to Terraform state files
+- Vulnerabilities in test dependencies
+- Issues that only affect test environments
 
 ## Security Updates
 
