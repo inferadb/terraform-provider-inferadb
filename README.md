@@ -23,16 +23,9 @@
 ```bash
 git clone https://github.com/inferadb/terraform-provider-inferadb.git
 cd terraform-provider-inferadb
-make install
+go build -v ./...
+go install -v ./...
 ```
-
-### Local Development
-
-```bash
-make dev-install
-```
-
-This installs the provider to `~/.terraform.d/plugins/` for local testing.
 
 ## Usage
 
@@ -123,22 +116,22 @@ inferadb login
 
 ```bash
 # Build
-make build
+go build -v ./...
 
 # Run tests
-make test
+go test -v -cover -timeout=120s -parallel=4 ./...
 
 # Run acceptance tests (requires TF_ACC=1 and API credentials)
-make testacc
+TF_ACC=1 go test -v -cover -timeout 120m ./...
 
 # Generate documentation
-make docs
+go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 
 # Format code
-make fmt
+gofmt -s -w -e .
 
 # Run linter
-make lint
+golangci-lint run
 ```
 
 ## Related Resources

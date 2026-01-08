@@ -2,34 +2,33 @@
 
 ## Build & Install
 ```bash
-make build          # Build the provider
-make install        # Build and install locally
-make dev-install    # Install to ~/.terraform.d/plugins for manual testing
+go build -v ./...                         # Build the provider
+go install -v ./...                       # Build and install locally
 ```
 
 ## Testing
 ```bash
-make test           # Run unit tests (fast, no API needed)
-make testacc        # Run acceptance tests (requires TF_ACC=1 and real API)
-go test -v -run TestName ./internal/provider/  # Run specific test
+go test -v -cover -timeout=120s -parallel=4 ./...   # Run unit tests
+TF_ACC=1 go test -v -cover -timeout 120m ./...      # Run acceptance tests
+go test -v -run TestName ./internal/provider/       # Run specific test
 ```
 
 ## Code Quality
 ```bash
-make fmt            # Format code with gofmt
-make lint           # Run golangci-lint
-make check          # Run fmt, lint, and test together
+gofmt -s -w -e .                          # Format code
+golangci-lint run                         # Run linter
 ```
 
 ## Documentation
 ```bash
-make docs           # Generate Terraform docs from code
+go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs  # Generate docs
 ```
 
 ## Dependencies
 ```bash
-make deps           # Download and tidy go modules
-make verify         # Verify module checksums
+go mod download                           # Download dependencies
+go mod tidy                               # Clean up go.mod/go.sum
+go mod verify                             # Verify module checksums
 ```
 
 ## Utility Commands (Darwin/macOS)

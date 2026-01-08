@@ -3,30 +3,29 @@
 Before considering a task complete, ensure:
 
 ## 1. Code Quality
-- [ ] Run `make fmt` - Code is properly formatted
-- [ ] Run `make lint` - No linting errors
+- [ ] Run `gofmt -s -w -e .` - Code is properly formatted
+- [ ] Run `golangci-lint run` - No linting errors
 - [ ] Code follows existing patterns in the codebase
 
 ## 2. Testing
-- [ ] Run `make test` - Unit tests pass
+- [ ] Run `go test -v -cover -timeout=120s -parallel=4 ./...` - Unit tests pass
 - [ ] Add/update tests for new functionality
 - [ ] For resource changes, consider acceptance tests
 
 ## 3. Documentation
 - [ ] Update schema `MarkdownDescription` for new attributes
-- [ ] Run `make docs` if schemas changed
+- [ ] Run docs generation if schemas changed
 - [ ] Update examples in `examples/` directory if needed
 
 ## 4. Final Verification
-- [ ] Run `make check` (combines fmt, lint, test)
-- [ ] Build succeeds: `make build`
-
-## Quick Command
 ```bash
-make check && make build
+gofmt -s -w -e .
+golangci-lint run
+go test -v -cover -timeout=120s -parallel=4 ./...
+go build -v ./...
 ```
 
 ## For New Resources/Data Sources
 - [ ] Add to provider's `Resources()` or `DataSources()` method
 - [ ] Create example file in `examples/resources/<name>/resource.tf`
-- [ ] Regenerate docs with `make docs`
+- [ ] Regenerate docs: `go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs`
