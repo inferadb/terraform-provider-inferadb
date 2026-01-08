@@ -5,7 +5,7 @@
         <a href="https://discord.gg/inferadb"><img src="https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white" alt="Discord" /></a>
         <a href="#license"><img src="https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg" alt="License" /></a>
     </p>
-    <p>Manage InferaDB resources including organizations, vaults, clients, teams, and access grants</p>
+    <p>Manage InferaDB organizations, vaults, clients, teams, and access grants</p>
 </div>
 
 > [!IMPORTANT]
@@ -14,7 +14,7 @@
 ## Requirements
 
 - [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0
-- [Go](https://golang.org/doc/install) >= 1.23 (for building from source)
+- [Go](https://golang.org/doc/install) >= 1.23 (to build from source)
 
 ## Installation
 
@@ -79,7 +79,7 @@ output "api_private_key" {
 
 ## Authentication
 
-The provider requires a session token for authentication. You can provide it via:
+The provider requires a session token. Provide it via:
 
 1. Provider configuration: `session_token = "..."`
 2. Environment variable: `INFERADB_SESSION_TOKEN`
@@ -92,25 +92,25 @@ inferadb login
 
 ## Resources
 
-| Resource                      | Description                                              |
-| ----------------------------- | -------------------------------------------------------- |
-| `inferadb_organization`       | Manages organizations (multi-tenant containers)          |
-| `inferadb_vault`              | Manages vaults (authorization policy storage)            |
-| `inferadb_client`             | Manages clients (backend service identities)             |
-| `inferadb_client_certificate` | Generates Ed25519 certificates for client authentication |
-| `inferadb_team`               | Manages teams for group-based access control             |
-| `inferadb_team_member`        | Manages team memberships                                 |
-| `inferadb_vault_user_grant`   | Grants user access to vaults                             |
-| `inferadb_vault_team_grant`   | Grants team access to vaults                             |
+| Resource                      | Description                                     |
+| ----------------------------- | ----------------------------------------------- |
+| `inferadb_organization`       | Manages organizations                           |
+| `inferadb_vault`              | Manages vaults for authorization policies       |
+| `inferadb_client`             | Manages client identities for backend services  |
+| `inferadb_client_certificate` | Generates client authentication certificates    |
+| `inferadb_team`               | Manages teams for group access control          |
+| `inferadb_team_member`        | Manages team memberships                        |
+| `inferadb_vault_user_grant`   | Grants users vault access                       |
+| `inferadb_vault_team_grant`   | Grants teams vault access                       |
 
 ## Data Sources
 
-| Data Source             | Description               |
-| ----------------------- | ------------------------- |
-| `inferadb_organization` | Read organization details |
-| `inferadb_vault`        | Read vault details        |
-| `inferadb_client`       | Read client details       |
-| `inferadb_team`         | Read team details         |
+| Data Source             | Description              |
+| ----------------------- | ------------------------ |
+| `inferadb_organization` | Reads organization data  |
+| `inferadb_vault`        | Reads vault data         |
+| `inferadb_client`       | Reads client data        |
+| `inferadb_team`         | Reads team data          |
 
 ## Development
 
@@ -142,13 +142,8 @@ golangci-lint run
 
 ## Community
 
-Join us on [Discord](https://discord.gg/inferadb) to discuss InferaDB, get help with your projects, and connect with other developers. Whether you have questions, want to share what you're building, or are interested in contributing, we'd love to have you!
+Join our [Discord](https://discord.gg/inferadb) to discuss InferaDB, get help, and connect with other developers.
 
 ## License
 
-Licensed under either of:
-
-- [Apache License, Version 2.0](LICENSE-APACHE)
-- [MIT License](LICENSE-MIT)
-
-at your option.
+Dual-licensed under [Apache 2.0](LICENSE-APACHE) and [MIT](LICENSE-MIT).
