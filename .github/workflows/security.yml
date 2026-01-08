@@ -5,8 +5,11 @@ name: Security
 on:
   pull_request:
     branches: [main]
-    # No path filter - this workflow must always run to satisfy required status checks.
-    # Change detection is handled by the detect-changes job below.
+
+# Cancel in-progress runs when new commits are pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
