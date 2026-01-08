@@ -142,8 +142,8 @@ golangci-lint run
 
 ## Community
 
-Join our [Discord](https://discord.gg/inferadb) to discuss InferaDB, get help, and connect with other developers.
+Join us on [Discord](https://discord.gg/inferadb) for questions, discussions, and contributions.
 
 ## License
 
-Dual-licensed under [Apache 2.0](LICENSE-APACHE) and [MIT](LICENSE-MIT).
+Dual-licensed under [MIT](LICENSE-MIT) or [Apache 2.0](LICENSE-APACHE).
