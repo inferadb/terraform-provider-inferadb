@@ -1,5 +1,9 @@
 # InferaDB Control Configuration - Terraform Provider Acceptance Tests
 # This configuration is optimized for automated testing
+#
+# NOTE: This file is kept for reference but the actual configuration is
+# provided via environment variables in docker-compose.test.yml. Environment
+# variables take precedence over this file.
 
 control:
   frontend:
@@ -10,10 +14,12 @@ control:
     grpc: "0.0.0.0:9091"
     mesh: "0.0.0.0:9092"
 
-  storage: "foundationdb"
+  storage: "ledger"
 
-  foundationdb:
-    cluster_file: "/var/fdb/fdb.cluster"
+  ledger:
+    endpoint: "http://ledger-server:50051"
+    client_id: "control-tf-test"
+    namespace_id: 1
 
   webauthn:
     party: "localhost"

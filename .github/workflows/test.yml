@@ -133,7 +133,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   # Acceptance tests run against a local Docker-based test environment
-  # Runs on push to main only (requires cloning Control repo for Docker build)
+  # Runs on push to main only (requires cloning Control and Ledger repos for Docker build)
   acceptance:
     name: Acceptance Tests
     runs-on: ubuntu-latest
@@ -149,6 +149,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
+      - name: Clone ledger repository
+        run: |
+          # Clone ledger repo as sibling directory (needed for Docker build context)
+          git clone --depth 1 https://github.com/inferadb/ledger.git ../ledger
+
+          # Verify clone succeeded and show structure
+          echo "Ledger repo contents:"
+          ls -la ../ledger/
+
       - name: Clone control repository
         run: |
           # Clone control repo as sibling directory (needed for Docker build context)
@@ -158,21 +167,28 @@ jobs:
           echo "Control repo contents:"
           ls -la ../control/
 
-      - name: Generate Cargo.lock if needed
+      - name: Generate Cargo.lock files if needed
         run: |
-          # Generate Cargo.lock using Docker (same Rust image as the build)
-          # This ensures version consistency and doesn't require Rust on the runner
+          # Generate Cargo.lock for ledger using Docker
+          if [ ! -f ../ledger/Cargo.lock ]; then
+            echo "Generating Ledger Cargo.lock using Docker..."
+            docker run --rm \
+              -v "$(realpath ../ledger):/workspace" \
+              -w /workspace \
+              rustlang/rust:nightly-bookworm-slim \
+              cargo generate-lockfile
+            echo "Ledger Cargo.lock generated"
+          fi
+
+          # Generate Cargo.lock for control using Docker
           if [ ! -f ../control/Cargo.lock ]; then
-            echo "Generating Cargo.lock using Docker..."
+            echo "Generating Control Cargo.lock using Docker..."
             docker run --rm \
               -v "$(realpath ../control):/workspace" \
               -w /workspace \
               rustlang/rust:nightly-bookworm-slim \
               cargo generate-lockfile
-            echo "Cargo.lock generated:"
-            ls -la ../control/Cargo.lock
-          else
-            echo "Cargo.lock already exists"
+            echo "Control Cargo.lock generated"
           fi
 
       - name: Setup Go
@@ -212,14 +228,14 @@ jobs:
           INFERADB_SESSION_TOKEN: ${{ steps.bootstrap.outputs.inferadb_session_token }}
         run: go test -v -cover -timeout 120m ./...
 
-      - name: Show Control logs on failure
+      - name: Show service logs on failure
         if: failure()
         run: |
+          echo "=== Ledger Logs ==="
+          docker compose -p terraform-provider-inferadb-test -f docker-compose.test.yml logs ledger
+          echo ""
           echo "=== Control Service Logs ==="
           docker compose -p terraform-provider-inferadb-test -f docker-compose.test.yml logs control
-          echo ""
-          echo "=== FoundationDB Logs ==="
-          docker compose -p terraform-provider-inferadb-test -f docker-compose.test.yml logs foundationdb
 
       - name: Cleanup test environment
         if: always()

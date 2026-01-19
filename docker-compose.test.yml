@@ -1,33 +1,42 @@
 # Docker Compose for Terraform Provider Acceptance Tests
-# This provides a complete test environment with FoundationDB, MailHog, and Control
+# This provides a complete test environment with Ledger, MailHog, and Control
 # NOT FOR PRODUCTION USE
 
 services:
-  # FoundationDB server (custom multi-arch build with ARM64 support)
-  foundationdb:
+  # Ledger storage backend (single-node for testing)
+  ledger:
     build:
-      context: ../control
-      dockerfile: docker/fdb-integration-tests/Dockerfile.fdb
-    container_name: terraform-provider-fdb
-    hostname: fdb-server
+      context: ../ledger
+      dockerfile: Dockerfile
+    container_name: terraform-provider-ledger
+    hostname: ledger-server
     networks:
       - terraform-test-network
-    healthcheck:
-      test: ["CMD-SHELL", "pgrep -x fdbserver > /dev/null && test -f /var/fdb/fdb.cluster"]
-      interval: 3s
-      timeout: 5s
-      retries: 20
-      start_period: 10s
+    ports:
+      - "50051:50051"
+      - "9093:9090"
+    environment:
+      INFERADB__LEDGER__BOOTSTRAP_EXPECT: "1"
+      INFERADB__LEDGER__LISTEN_ADDR: "0.0.0.0:50051"
+      INFERADB__LEDGER__METRICS_ADDR: "0.0.0.0:9090"
+      INFERADB__LEDGER__DATA_DIR: "/var/lib/ledger"
+      RUST_LOG: "info,inferadb_ledger_server=debug"
     volumes:
-      - fdb-config:/var/fdb
+      - ledger-data:/var/lib/ledger
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 50051 || exit 1"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
     deploy:
       resources:
         limits:
           cpus: "2.0"
-          memory: 2G
+          memory: 1G
         reservations:
-          cpus: "0.5"
-          memory: 512M
+          cpus: "0.25"
+          memory: 256M
 
   # MailHog for email testing (captures verification emails)
   mailhog:
@@ -48,7 +57,7 @@ services:
   control:
     build:
       context: ../control
-      dockerfile: Dockerfile.integration
+      dockerfile: Dockerfile
     container_name: terraform-provider-control
     networks:
       - terraform-test-network
@@ -57,21 +66,48 @@ services:
       - "9091:9091"  # Public gRPC API
       - "9092:9092"  # Private REST API (JWKS, internal)
     depends_on:
-      foundationdb:
+      ledger:
         condition: service_healthy
       mailhog:
         condition: service_healthy
     environment:
-      # FoundationDB cluster file location
-      FDB_CLUSTER_FILE: /var/fdb/fdb.cluster
+      # Control configuration
+      INFERADB__CONTROL__LISTEN__HTTP: "0.0.0.0:9090"
+      INFERADB__CONTROL__LISTEN__GRPC: "0.0.0.0:9091"
+      INFERADB__CONTROL__LISTEN__MESH: "0.0.0.0:9092"
+      INFERADB__CONTROL__FRONTEND__URL: "http://localhost:9090"
+      # Storage: Use Ledger
+      INFERADB__CONTROL__STORAGE: "ledger"
+      INFERADB__CONTROL__LEDGER__ENDPOINT: "http://ledger-server:50051"
+      INFERADB__CONTROL__LEDGER__CLIENT_ID: "control-tf-test"
+      INFERADB__CONTROL__LEDGER__NAMESPACE_ID: "1"
+      # WebAuthn (localhost for testing)
+      INFERADB__CONTROL__WEBAUTHN__PARTY: "localhost"
+      INFERADB__CONTROL__WEBAUTHN__ORIGIN: "http://localhost:9090"
+      # Email (MailHog)
+      INFERADB__CONTROL__EMAIL__HOST: "mailhog"
+      INFERADB__CONTROL__EMAIL__PORT: "1025"
+      INFERADB__CONTROL__EMAIL__ADDRESS: "test@inferadb.local"
+      INFERADB__CONTROL__EMAIL__NAME: "InferaDB Test"
+      INFERADB__CONTROL__EMAIL__INSECURE: "true"
+      # Relaxed rate limits for testing
+      INFERADB__CONTROL__LIMITS__LOGIN_ATTEMPTS_PER_IP_PER_HOUR: "10000"
+      INFERADB__CONTROL__LIMITS__REGISTRATIONS_PER_IP_PER_DAY: "10000"
+      INFERADB__CONTROL__LIMITS__EMAIL_VERIFICATION_TOKENS_PER_HOUR: "10000"
+      INFERADB__CONTROL__LIMITS__PASSWORD_RESET_TOKENS_PER_HOUR: "10000"
+      # Mesh configuration
+      INFERADB__CONTROL__MESH__URL: "http://inferadb-engine.inferadb"
+      INFERADB__CONTROL__MESH__GRPC: "8081"
+      INFERADB__CONTROL__MESH__PORT: "8082"
+      # Webhook configuration
+      INFERADB__CONTROL__WEBHOOK__TIMEOUT: "5000"
+      INFERADB__CONTROL__WEBHOOK__RETRIES: "0"
+      # Discovery (disabled for testing)
+      INFERADB__CONTROL__DISCOVERY__MODE__TYPE: "none"
+      INFERADB__CONTROL__DISCOVERY__CACHE_TTL: "30"
       # Logging
-      RUST_LOG: debug
-      RUST_BACKTRACE: 1
-    volumes:
-      # Share FDB cluster configuration (mount to /var/fdb as expected by config)
-      - fdb-config:/var/fdb:ro
-      # Mount custom config for testing
-      - ./config.test.yaml:/app/config.yaml:ro
+      RUST_LOG: "info,inferadb_control=debug"
+      RUST_BACKTRACE: "1"
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:9090/healthz"]
       interval: 5s
@@ -85,5 +121,5 @@ networks:
     name: terraform-provider-test-net
 
 volumes:
-  fdb-config:
-    name: terraform-provider-fdb-config
+  ledger-data:
+    name: terraform-provider-ledger-data
